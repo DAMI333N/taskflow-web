@@ -13,6 +13,8 @@ export default function AddTaskForm() {
   const { addTask } = useTasks();
   const [form, setForm] = useState(EMPTY_FORM);
 
+  const isSubmitDisabled = form.title.trim() === '';
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((previous) => ({ ...previous, [name]: value }));
@@ -21,7 +23,7 @@ export default function AddTaskForm() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (form.title.trim() === '') {
+    if (isSubmitDisabled) {
       return;
     }
 
@@ -82,7 +84,9 @@ export default function AddTaskForm() {
         <option value="high">High</option>
       </select>
 
-      <button type="submit">Add Task</button>
+      <button type="submit" disabled={isSubmitDisabled}>
+        Add Task
+      </button>
     </form>
   );
 }

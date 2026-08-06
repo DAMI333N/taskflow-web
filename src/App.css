@@ -219,3 +219,15 @@ header h1 {
     grid-column: 1 / -1;
   }
 }
+
+.task-count {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: #6b7684;
+}
+
+.add-task-form button:disabled,
+.add-task-form button:disabled:hover {
+  background: #b9c4d4;
+  cursor: not-allowed;
+}

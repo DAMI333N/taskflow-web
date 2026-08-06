@@ -82,7 +82,10 @@ in the brief requires persistence.
 
 ## Bonus challenges
 
-None attempted.
+Two of the 'Easy' bonuses are implemented:
+
+- A task count summary above the list, "Showing X of Y tasks"
+- The Add Task submit button is disabled while the title field is empty
 
 ## AI usage
 
