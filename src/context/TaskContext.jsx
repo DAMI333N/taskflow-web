@@ -1,13 +1,39 @@
 // src/context/TaskContext.jsx
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 import { taskReducer, initialState } from '../reducer/taskReducer.js';
 
 const TaskContext = createContext(null);
 
+const STORAGE_KEY = 'task-manager.tasks';
+
+function initTaskState(defaultState) {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+
+    if (stored === null) {
+      return defaultState;
+    }
+
+    const parsed = JSON.parse(stored);
+
+    if (!Array.isArray(parsed)) {
+      return defaultState;
+    }
+
+    return { ...defaultState, tasks: parsed };
+  } catch {
+    return defaultState;
+  }
+}
+
 export function TaskProvider({ children }) {
-  const [state, dispatch] = useReducer(taskReducer, initialState);
+  const [state, dispatch] = useReducer(taskReducer, initialState, initTaskState);
 
   const { tasks, filter } = state;
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }, [tasks]);
 
   const filteredTasks =
     filter === 'all' ? tasks : tasks.filter((task) => task.status === filter);
@@ -25,6 +51,10 @@ export function TaskProvider({ children }) {
     });
   };
 
+  const updateTask = (updatedTask) => {
+    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+  };
+
   const deleteTask = (id) => {
     dispatch({ type: 'DELETE_TASK', payload: id });
   };
@@ -33,7 +63,15 @@ export function TaskProvider({ children }) {
     dispatch({ type: 'SET_FILTER', payload: nextFilter });
   };
 
-  const value = { tasks, filteredTasks, filter, addTask, deleteTask, setFilter };
+  const value = {
+    tasks,
+    filteredTasks,
+    filter,
+    addTask,
+    updateTask,
+    deleteTask,
+    setFilter,
+  };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
 }
