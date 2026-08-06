@@ -38,6 +38,10 @@ export function TaskProvider({ children }) {
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
 }
 
+// The assignment specifies that the context lives in this file, so the consumer
+// hook is exported alongside the provider. This only affects Fast Refresh:
+// editing this file triggers a full reload instead of a hot update.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTasks() {
   const context = useContext(TaskContext);
 
