@@ -4,6 +4,8 @@ A small React app for viewing, adding, deleting and filtering tasks. Application
 state is managed with `useReducer`, shared across the component tree with
 `useContext`, and navigation is handled by React Router.
 
+Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
+
 ![Task list with the To Do filter active](docs/screenshot.png)
 
 ## Features
@@ -43,14 +45,17 @@ npm run lint      # ESLint
 ```
 
 ## Project structure
+
+```
 src/
-main.jsx provider, router and app mounted here
-App.jsx header plus route definitions
-reducer/taskReducer.js ADD_TASK, DELETE_TASK, SET_FILTER
-context/TaskContext.jsx useReducer, derived filteredTasks, useTasks hook
-data/seedTasks.js six seed tasks
-components/ Header, FilterBar, TaskList, TaskItem, AddTaskForm
-pages/ TaskListPage, TaskDetailPage
+  main.jsx                    provider, router and app mounted here
+  App.jsx                     header plus route definitions
+  reducer/taskReducer.js      ADD_TASK, DELETE_TASK, SET_FILTER
+  context/TaskContext.jsx     useReducer, derived filteredTasks, useTasks hook
+  data/seedTasks.js           six seed tasks
+  components/                 Header, FilterBar, TaskList, TaskItem, AddTaskForm
+  pages/                      TaskListPage, TaskDetailPage
+```
 
 ## How state works
 
@@ -88,6 +93,8 @@ Claude (Anthropic), used through Cowork, was used for:
 - Critiquing that plan and revising it before any code was written
 - Explaining the concepts behind each step: reducer purity, derived versus
   stored state, controlled inputs, and route parameters
+- Producing the source files, which I reviewed, pasted, ran and verified against
+  the assignment requirements at each step
 
 No code was adapted from external sources beyond the React, React Router and
 Vite documentation linked in the assignment brief.
