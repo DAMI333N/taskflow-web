@@ -1,4 +1,10 @@
 // src/pages/TaskListPage.jsx
+import TaskList from '../components/TaskList.jsx';
+
 export default function TaskListPage() {
-  return <p>Task list page placeholder</p>;
+  return (
+    <section>
+      <TaskList />
+    </section>
+  );
 }
