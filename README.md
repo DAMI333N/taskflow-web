@@ -7,7 +7,7 @@ Router.
 
 Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
 
-![Task list with the To Do filter active](docs/screenshot.png)
+![Task list with the High priority filter active, showing 3 of 6 tasks](docs/screenshot.png)
 
 ## Features
 
