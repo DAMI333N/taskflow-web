@@ -1,8 +1,9 @@
 # Task Manager
 
-A small React app for viewing, adding, editing, deleting and filtering tasks.
-Application state is managed with `useReducer`, shared across the component tree
-with `useContext`, and navigation is handled by React Router.
+A small React app for viewing, adding, editing, deleting, reordering and
+filtering tasks. Application state is managed with `useReducer`, shared across
+the component tree with `useContext`, and navigation is handled by React
+Router.
 
 Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
 
@@ -12,10 +13,11 @@ Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
 
 - Task list at `/tasks` showing title, status badge and priority for every task
 - Task detail page at `/tasks/:id` showing all fields for a single task
-- Filter bar narrowing the list by status: All, To Do, In Progress, Done
+- Filter bar narrowing the list by status and by priority, both active at once
 - Controlled form for adding tasks, with title, description, status and priority
 - Delete button on every task row
 - Inline edit form on the detail page
+- Drag-and-drop reordering of task rows, using browser drag events only
 - Tasks persist across page reloads
 - `/` redirects to `/tasks`, and unknown URLs redirect there too
 - "Task not found" page for an id that matches no task
@@ -52,7 +54,8 @@ npm run lint      # ESLint
 src/
   main.jsx                    provider, router and app mounted here
   App.jsx                     header plus route definitions
-  reducer/taskReducer.js      ADD_TASK, UPDATE_TASK, DELETE_TASK, SET_FILTER
+  reducer/taskReducer.js      ADD_TASK, UPDATE_TASK, DELETE_TASK,
+                              REORDER_TASKS, SET_FILTER, SET_PRIORITY_FILTER
   context/TaskContext.jsx     useReducer, derived filteredTasks, persistence
   data/seedTasks.js           six seed tasks
   components/                 Header, FilterBar, TaskList, TaskItem, AddTaskForm
@@ -66,13 +69,24 @@ pure function: it never mutates the state it receives and always returns a new
 object.
 
 `TaskProvider` runs the reducer and exposes a fixed set of values and actions to
-the tree: `tasks`, `filteredTasks`, `filter`, `addTask`, `updateTask`,
-`deleteTask` and `setFilter`. `dispatch` is deliberately not exposed, so
-components cannot fire arbitrary actions.
+the tree: `tasks`, `filteredTasks`, `filter`, `priorityFilter`, `addTask`,
+`updateTask`, `deleteTask`, `reorderTasks`, `setFilter` and `setPriorityFilter`.
+`dispatch` is deliberately not exposed, so components cannot fire arbitrary
+actions.
 
-`filteredTasks` is derived during render from `tasks` and `filter`. It is never
-stored in state, which means there is no second copy of the list that can drift
-out of sync with the first.
+`filteredTasks` is derived during render from `tasks`, `filter` and
+`priorityFilter`. It is never stored in state, which means there is no second
+copy of the list that can drift out of sync with the first. The status filter
+stays a scalar string, exactly as the assignment's core action table specifies;
+the priority filter is a separate piece of state with its own action rather than
+a change to the `SET_FILTER` payload.
+
+Reordering is expressed in task ids plus a `'before'` or `'after'` position,
+never in list positions, so a drag is applied correctly to the full task list
+even when the visible list is filtered. While dragging, the row under the
+pointer shows an insertion line on its top or bottom edge depending on which
+half of that row the pointer is over, and the dragged row itself fades, so the
+drop target is visible before the mouse is released.
 
 Ids are mixed types by design: seed tasks use the numeric ids from the
 assignment brief, while new tasks get a `crypto.randomUUID()` string. Because
@@ -98,14 +112,20 @@ Medium, both implemented:
 - Tasks persist in `localStorage` and survive a page reload
 - An `UPDATE_TASK` action with an inline edit form on the task detail page
 
-Hard, not attempted:
+Hard, both implemented:
 
-- Drag-and-drop reordering
-- A priority filter layered on top of the status filter
+- Drag-and-drop reordering of tasks using only browser drag events, no library
+- A priority filter layered on top of the status filter, with both active at the
+  same time
+
+![A task being dragged, with an insertion line marking where it will land](docs/screenshot-drag.png)
+
+While a row is dragged it fades, and the row under the pointer shows a blue
+insertion line on the edge the dragged row will land on.
 
 ## AI usage
 
-Claude (Anthropic), used through Cowork, was used for:
+Claude (Anthropic), was used for:
 
 - Reviewing the assignment brief and drafting the implementation plan, including
   build order and a pre-submission verification checklist

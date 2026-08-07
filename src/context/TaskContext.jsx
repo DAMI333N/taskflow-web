@@ -29,14 +29,19 @@ function initTaskState(defaultState) {
 export function TaskProvider({ children }) {
   const [state, dispatch] = useReducer(taskReducer, initialState, initTaskState);
 
-  const { tasks, filter } = state;
+  const { tasks, filter, priorityFilter } = state;
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   }, [tasks]);
 
-  const filteredTasks =
-    filter === 'all' ? tasks : tasks.filter((task) => task.status === filter);
+  const filteredTasks = tasks.filter((task) => {
+    const statusMatches = filter === 'all' || task.status === filter;
+    const priorityMatches =
+      priorityFilter === 'all' || task.priority === priorityFilter;
+
+    return statusMatches && priorityMatches;
+  });
 
   const addTask = ({ title, description, status, priority }) => {
     dispatch({
@@ -59,18 +64,32 @@ export function TaskProvider({ children }) {
     dispatch({ type: 'DELETE_TASK', payload: id });
   };
 
+  const reorderTasks = (draggedId, targetId, position) => {
+    dispatch({
+      type: 'REORDER_TASKS',
+      payload: { draggedId, targetId, position },
+    });
+  };
+
   const setFilter = (nextFilter) => {
     dispatch({ type: 'SET_FILTER', payload: nextFilter });
+  };
+
+  const setPriorityFilter = (nextPriorityFilter) => {
+    dispatch({ type: 'SET_PRIORITY_FILTER', payload: nextPriorityFilter });
   };
 
   const value = {
     tasks,
     filteredTasks,
     filter,
+    priorityFilter,
     addTask,
     updateTask,
     deleteTask,
+    reorderTasks,
     setFilter,
+    setPriorityFilter,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
