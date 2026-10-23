@@ -1,42 +1,66 @@
-# Task Manager
+# TaskFlow Web
 
-A small React app for viewing, adding, editing, deleting and filtering tasks. Application state is managed with `useReducer`, shared across
-the component tree with `useContext`, and navigation is handled by React
-Router.
+A React frontend for the [TaskFlow API](https://github.com/DAMI333N/taskflow-api).
+It lists, adds, edits, completes, deletes and filters tasks, with every change
+read from and written to the API. It can also ask the API for an AI summary of
+the task list.
 
-Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
+Built for NTU AI Engineering, Module 4, stretch Option 2. It started from my
+Module 2 React app and replaces its local state and `localStorage` with the
+API.
 
-![Task list with the High priority filter active, showing 3 of 6 tasks](docs/screenshot.png)
+Live site: `https://<site-name>.netlify.app` (placeholder until deployed)
+
+![Task list loaded from the TaskFlow API, with Complete and Delete buttons on each row](docs/screenshot.jpg)
 
 ## Features
 
-- Task list at `/tasks` showing title, status badge and priority for every task
-- Task detail page at `/tasks/:id` showing all fields for a single task
-- Filter bar narrowing the list by status and by priority, both active at once
-- Controlled form for adding tasks, with title, description, status and priority
-- Delete button on every task row
-- Inline edit form on the detail page
-- Tasks persist across page reloads
-- `/` redirects to `/tasks`, and unknown URLs redirect there too
-- "Task not found" page for an id that matches no task
+- Task list at `/tasks`, loaded from `GET /api/tasks`, with status badge and
+  priority on every row
+- Task detail page at `/tasks/:id`, fetched from `GET /api/tasks/{id}`, so deep
+  links and refreshes work
+- Add form (`POST`), inline edit form (`PUT`, full replace), Delete (`DELETE`)
+  and Complete (`PUT /api/tasks/{id}/complete`)
+- Summarise button calling `GET /api/tasks/summary`
+- Filters by status and by priority, both active at once
+- Loading text while requests run, the API's own error message when one fails,
+  and a Retry button when the list cannot load
+- "Task not found" page that shows the API's 404 message for an unknown id
+- `/` and unknown URLs redirect to `/tasks`
 
 ## Tech stack
 
 - React 19 with Vite
 - React Router for client-side routing
-- `useReducer` and `useContext` for state, no external state library
-- Plain CSS, no UI framework
+- `useReducer` and `useContext` for state, `fetch` for HTTP, no extra libraries
+- Plain CSS
 
 ## Getting started
 
+You need Node 22 and a running TaskFlow API (see its README to run it locally on
+port 8080).
+
 ```bash
-git clone https://github.com/DAMI333N/task-manager
-cd task-manager
+git clone https://github.com/DAMI333N/taskflow-web
+cd taskflow-web
 npm install
+```
+
+Create `.env.development` in the project root, using `.env.example` as the
+template, and point it at the API with no trailing slash:
+
+```
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+Then start the dev server:
+
+```bash
 npm run dev
 ```
 
-The dev server prints a local URL, by default `http://localhost:5173`.
+It serves the app on `http://localhost:5173`, which is the origin the API allows
+by default.
 
 Other scripts:
 
@@ -46,38 +70,57 @@ npm run preview   # serve the production build
 npm run lint      # ESLint
 ```
 
+## Deploying to Netlify
+
+- Build command `npm run build`, publish directory `dist`
+- Set `VITE_API_BASE_URL` to the deployed API URL in the site's environment
+  variables. Vite reads it at build time, so redeploy after changing it.
+- `public/_redirects` sends every path to `index.html`, so a refresh on
+  `/tasks/3` loads the app instead of a Netlify 404
+- The API must list the Netlify origin in `taskflow.cors.allowed-origins`,
+  otherwise the browser blocks every request
+
 ## Project structure
 
 ```
 src/
   main.jsx                    provider, router and app mounted here
   App.jsx                     header plus route definitions
-  reducer/taskReducer.js      ADD_TASK, UPDATE_TASK, DELETE_TASK,
+  api/tasksApi.js             every call to the TaskFlow API
+  reducer/taskReducer.js      FETCH_START, FETCH_SUCCESS, FETCH_ERROR,
+                              ADD_TASK, UPDATE_TASK, DELETE_TASK,
                               SET_FILTER, SET_PRIORITY_FILTER
-  context/TaskContext.jsx     useReducer, derived filteredTasks, persistence
-  data/seedTasks.js           six seed tasks
-  components/                 Header, FilterBar, TaskList, TaskItem, AddTaskForm
+  context/TaskContext.jsx     loads tasks, exposes data and async actions
+  components/                 Header, AddTaskForm, SummaryPanel, FilterBar,
+                              TaskList, TaskItem
   pages/                      TaskListPage, TaskDetailPage
 ```
 
-## How state works
+## How data flows
 
-`taskReducer` owns the only two pieces of state, `tasks` and `filter`, and is a
-pure function: it never mutates the state it receives and always returns a new
-object.
+The server is the source of truth. `src/api/tasksApi.js` holds every request
+behind one helper that checks `response.ok` and, on failure, throws an `Error`
+carrying the message from the API's `{ status, message, timestamp }` body and
+the HTTP status. Components never call `fetch` directly.
 
-`TaskProvider` runs the reducer and exposes a fixed set of values and actions to
-the tree: `tasks`, `filteredTasks`, `filter`, `priorityFilter`, `addTask`,
-`updateTask`, `deleteTask`, `setFilter` and `setPriorityFilter`.
-`dispatch` is deliberately not exposed, so components cannot fire arbitrary
-actions.
+`TaskProvider` loads the list once on mount: it dispatches `FETCH_START`, then
+`FETCH_SUCCESS` with the server's tasks or `FETCH_ERROR` with the message. An
+`ignore` flag in the effect's cleanup discards a stale response, which matters
+because React StrictMode mounts twice in development.
 
-`filteredTasks` is derived during render from `tasks`, `filter` and
-`priorityFilter`. It is never stored in state, which means there is no second
-copy of the list that can drift out of sync with the first. The status filter
-stays a scalar string, exactly as the assignment's core action table specifies;
-the priority filter is a separate piece of state with its own action rather than
-a change to the `SET_FILTER` payload.
+`addTask`, `updateTask`, `completeTask` and `deleteTask` call the API first and
+dispatch only after it succeeds, using the task the server returns. Nothing is
+updated optimistically, so the screen never shows a change the server rejected.
+Each action rethrows on failure, so the form or button that started it shows the
+error next to itself and keeps the user's input.
+
+The detail page fetches its own task by id instead of searching the list. A 404
+or 400 from the API shows "Task not found" with the server's message. Saving an
+edit or completing the task updates both the page and the list from the
+server's response.
+
+`filteredTasks` is derived during render from `tasks` and the two filters. It is
+never stored, so it cannot drift out of sync with the list.
 
 ## Why reordering was removed
 
@@ -87,48 +130,27 @@ the browser could never be saved: it would silently reset on the next reload.
 Rather than show a control that quietly loses your work, drag-and-drop and the
 `REORDER_TASKS` action were removed.
 
-Ids are mixed types by design: seed tasks use the numeric ids from the
-assignment brief, while new tasks get a `crypto.randomUUID()` string. Because
-`useParams` always returns a string, every id comparison in the app goes through
-`String()` on both sides.
+## The summary button
 
-Tasks are persisted to `localStorage` under the key `task-manager.tasks`. The
-saved list is read once when the provider mounts, using `useReducer`'s third
-initialiser argument, and written back by a `useEffect` whenever `tasks`
-changes. Missing, corrupt or unexpectedly shaped stored data falls back to the
-seed list rather than throwing. The active filter is not persisted and resets to
-All on reload.
+`GET /api/tasks/summary` asks the API to summarise the task list with a language
+model. When the API has no model key configured it returns 502, and the page
+shows the API's message under the button instead of failing. That is the
+expected result on the live site.
 
-## Bonus challenges
+## AI and Tools
 
-Easy, both implemented:
+- **Claude Code** (Anthropic) planned the migration from my step list, then
+  implemented it one step per commit. I approved the plan before any code was
+  written and reviewed each step's diff, browser check and commit.
+- **react-patterns skill** (ECC plugin for Claude Code) guided the state and
+  data-fetching design, such as the effect cleanup flag and keeping derived data
+  out of state.
+- **react-reviewer agent** (ECC plugin) reviewed the finished change set for
+  hook correctness, error handling and accessibility before submission.
+- **Claude Code's Browser pane** ran every step against the real API through an
+  SSH tunnel, checking network requests and the console.
+- Vite, ESLint, Git and the GitHub CLI for building, linting and version
+  control; Netlify for hosting.
 
-- Task count summary above the list, "Showing X of Y tasks"
-- The Add Task submit button is disabled while the title field is empty
-
-Medium, both implemented:
-
-- Tasks persist in `localStorage` and survive a page reload
-- An `UPDATE_TASK` action with an inline edit form on the task detail page
-
-Hard:
-
-- A priority filter layered on top of the status filter, with both active at the
-  same time
-- Drag-and-drop reordering was built in Module 2 and removed for the API
-  version, see "Why reordering was removed" above
-
-## AI usage
-
-Claude (Anthropic), was used for:
-
-- Reviewing the assignment brief and drafting the implementation plan, including
-  build order and a pre-submission verification checklist
-- Critiquing that plan and revising it before any code was written
-- Explaining the concepts behind each step: reducer purity, derived versus
-  stored state, controlled inputs, and route parameters
-- Producing the source files, which I reviewed, pasted, ran and verified against
-  the assignment requirements at each step
-
-No code was adapted from external sources beyond the React, React Router and
-Vite documentation linked in the assignment brief.
+No code was copied from external sources beyond the React, React Router and Vite
+documentation.

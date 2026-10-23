@@ -2,7 +2,7 @@
 export default function Header() {
   return (
     <header>
-      <h1>Task Manager</h1>
+      <h1>TaskFlow</h1>
     </header>
   );
 }
