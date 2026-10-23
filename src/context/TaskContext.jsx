@@ -61,13 +61,6 @@ export function TaskProvider({ children }) {
     dispatch({ type: 'DELETE_TASK', payload: id });
   };
 
-  const reorderTasks = (draggedId, targetId, position) => {
-    dispatch({
-      type: 'REORDER_TASKS',
-      payload: { draggedId, targetId, position },
-    });
-  };
-
   const setFilter = (nextFilter) => {
     dispatch({ type: 'SET_FILTER', payload: nextFilter });
   };
@@ -86,7 +79,6 @@ export function TaskProvider({ children }) {
     addTask,
     updateTask,
     deleteTask,
-    reorderTasks,
     setFilter,
     setPriorityFilter,
   };

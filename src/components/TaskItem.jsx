@@ -4,9 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTasks } from '../context/TaskContext.jsx';
 
 export default function TaskItem({ task }) {
-  const { deleteTask, reorderTasks } = useTasks();
-  const [isDragging, setIsDragging] = useState(false);
-  const [dropPosition, setDropPosition] = useState(null);
+  const { deleteTask } = useTasks();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -23,77 +21,9 @@ export default function TaskItem({ task }) {
     }
   };
 
-  const handleDragStart = (event) => {
-    event.dataTransfer.setData('text/plain', String(task.id));
-    event.dataTransfer.effectAllowed = 'move';
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    setDropPosition(null);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-
-    if (isDragging) {
-      return;
-    }
-
-    const rect = event.currentTarget.getBoundingClientRect();
-    const isBelowMidpoint = event.clientY > rect.top + rect.height / 2;
-
-    setDropPosition(isBelowMidpoint ? 'after' : 'before');
-  };
-
-  const handleDragLeave = () => {
-    setDropPosition(null);
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-
-    const draggedId = event.dataTransfer.getData('text/plain');
-    const position = dropPosition ?? 'before';
-
-    setDropPosition(null);
-
-    if (draggedId) {
-      reorderTasks(draggedId, task.id, position);
-    }
-  };
-
-  const classNames = ['task-item'];
-
-  if (isDragging) {
-    classNames.push('is-dragging');
-  }
-
-  if (dropPosition === 'before') {
-    classNames.push('drop-before');
-  }
-
-  if (dropPosition === 'after') {
-    classNames.push('drop-after');
-  }
-
   return (
-    <li
-      className={classNames.join(' ')}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <span className="drag-handle" aria-hidden="true">
-        ⠿
-      </span>
-
-      <Link className="task-title" to={`/tasks/${task.id}`} draggable={false}>
+    <li className="task-item">
+      <Link className="task-title" to={`/tasks/${task.id}`}>
         {task.title}
       </Link>
 

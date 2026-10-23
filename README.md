@@ -1,7 +1,6 @@
 # Task Manager
 
-A small React app for viewing, adding, editing, deleting, reordering and
-filtering tasks. Application state is managed with `useReducer`, shared across
+A small React app for viewing, adding, editing, deleting and filtering tasks. Application state is managed with `useReducer`, shared across
 the component tree with `useContext`, and navigation is handled by React
 Router.
 
@@ -17,7 +16,6 @@ Built for NTU AI Engineering, Module 2: Frontend Development (React Web).
 - Controlled form for adding tasks, with title, description, status and priority
 - Delete button on every task row
 - Inline edit form on the detail page
-- Drag-and-drop reordering of task rows, using browser drag events only
 - Tasks persist across page reloads
 - `/` redirects to `/tasks`, and unknown URLs redirect there too
 - "Task not found" page for an id that matches no task
@@ -55,7 +53,7 @@ src/
   main.jsx                    provider, router and app mounted here
   App.jsx                     header plus route definitions
   reducer/taskReducer.js      ADD_TASK, UPDATE_TASK, DELETE_TASK,
-                              REORDER_TASKS, SET_FILTER, SET_PRIORITY_FILTER
+                              SET_FILTER, SET_PRIORITY_FILTER
   context/TaskContext.jsx     useReducer, derived filteredTasks, persistence
   data/seedTasks.js           six seed tasks
   components/                 Header, FilterBar, TaskList, TaskItem, AddTaskForm
@@ -70,7 +68,7 @@ object.
 
 `TaskProvider` runs the reducer and exposes a fixed set of values and actions to
 the tree: `tasks`, `filteredTasks`, `filter`, `priorityFilter`, `addTask`,
-`updateTask`, `deleteTask`, `reorderTasks`, `setFilter` and `setPriorityFilter`.
+`updateTask`, `deleteTask`, `setFilter` and `setPriorityFilter`.
 `dispatch` is deliberately not exposed, so components cannot fire arbitrary
 actions.
 
@@ -81,12 +79,13 @@ stays a scalar string, exactly as the assignment's core action table specifies;
 the priority filter is a separate piece of state with its own action rather than
 a change to the `SET_FILTER` payload.
 
-Reordering is expressed in task ids plus a `'before'` or `'after'` position,
-never in list positions, so a drag is applied correctly to the full task list
-even when the visible list is filtered. While dragging, the row under the
-pointer shows an insertion line on its top or bottom edge depending on which
-half of that row the pointer is over, and the dragged row itself fades, so the
-drop target is visible before the mouse is released.
+## Why reordering was removed
+
+The Module 2 version let you drag rows into a new order. The TaskFlow API
+returns tasks in creation order and stores no order field, so a reorder made in
+the browser could never be saved: it would silently reset on the next reload.
+Rather than show a control that quietly loses your work, drag-and-drop and the
+`REORDER_TASKS` action were removed.
 
 Ids are mixed types by design: seed tasks use the numeric ids from the
 assignment brief, while new tasks get a `crypto.randomUUID()` string. Because
@@ -112,16 +111,12 @@ Medium, both implemented:
 - Tasks persist in `localStorage` and survive a page reload
 - An `UPDATE_TASK` action with an inline edit form on the task detail page
 
-Hard, both implemented:
+Hard:
 
-- Drag-and-drop reordering of tasks using only browser drag events, no library
 - A priority filter layered on top of the status filter, with both active at the
   same time
-
-![A task being dragged, with an insertion line marking where it will land](docs/screenshot-drag.png)
-
-While a row is dragged it fades, and the row under the pointer shows a blue
-insertion line on the edge the dragged row will land on.
+- Drag-and-drop reordering was built in Module 2 and removed for the API
+  version, see "Why reordering was removed" above
 
 ## AI usage
 

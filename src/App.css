@@ -172,31 +172,13 @@ header h1 {
 
 .task-item {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
   background: #ffffff;
   border: 1px solid #e1e5ea;
   border-radius: 8px;
-}
-
-.task-item.is-dragging {
-  opacity: 0.4;
-}
-
-.task-item.drop-before {
-  box-shadow: 0 -3px 0 0 #2c6bed;
-}
-
-.task-item.drop-after {
-  box-shadow: 0 3px 0 0 #2c6bed;
-}
-
-.drag-handle {
-  color: #b3bcc7;
-  cursor: grab;
-  user-select: none;
 }
 
 .task-title {
@@ -308,13 +290,8 @@ header h1 {
   margin: 0;
 }
 
-/* Narrow screens. HTML5 drag events do not fire from touch, so the grip is
-   hidden rather than shown as something that cannot work. */
+/* Narrow screens */
 @media (max-width: 540px) {
-  .drag-handle {
-    display: none;
-  }
-
   .task-item {
     grid-template-columns: 1fr auto;
     row-gap: 8px;

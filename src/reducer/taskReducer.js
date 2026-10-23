@@ -52,38 +52,6 @@ export function taskReducer(state, action) {
         ),
       };
 
-    case 'REORDER_TASKS': {
-      const { draggedId, targetId, position } = action.payload;
-
-      if (String(draggedId) === String(targetId)) {
-        return state;
-      }
-
-      const from = state.tasks.findIndex(
-        (task) => String(task.id) === String(draggedId)
-      );
-
-      if (from === -1) {
-        return state;
-      }
-
-      const nextTasks = [...state.tasks];
-      const [moved] = nextTasks.splice(from, 1);
-
-      const targetIndex = nextTasks.findIndex(
-        (task) => String(task.id) === String(targetId)
-      );
-
-      if (targetIndex === -1) {
-        return state;
-      }
-
-      const insertAt = position === 'after' ? targetIndex + 1 : targetIndex;
-      nextTasks.splice(insertAt, 0, moved);
-
-      return { ...state, tasks: nextTasks };
-    }
-
     case 'SET_FILTER':
       return {
         ...state,
