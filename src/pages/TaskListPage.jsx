@@ -1,6 +1,7 @@
 // src/pages/TaskListPage.jsx
 import AddTaskForm from '../components/AddTaskForm.jsx';
 import FilterBar from '../components/FilterBar.jsx';
+import SummaryPanel from '../components/SummaryPanel.jsx';
 import TaskList from '../components/TaskList.jsx';
 import { useTasks } from '../context/TaskContext.jsx';
 
@@ -37,6 +38,7 @@ export default function TaskListPage() {
   return (
     <section>
       <AddTaskForm />
+      <SummaryPanel />
       <FilterBar />
       {content}
     </section>
