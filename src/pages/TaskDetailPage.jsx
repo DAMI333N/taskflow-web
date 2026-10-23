@@ -1,23 +1,79 @@
 // src/pages/TaskDetailPage.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTasks } from '../context/TaskContext.jsx';
+import { getTask } from '../api/tasksApi.js';
 
+// Keyed by id so every field below starts fresh when the route id changes.
 export default function TaskDetailPage() {
   const { id } = useParams();
-  const { tasks, updateTask } = useTasks();
+  return <TaskDetail key={id} id={id} />;
+}
+
+function TaskDetail({ id }) {
+  const { updateTask } = useTasks();
+  const [task, setTask] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadCount, setReloadCount] = useState(0);
   const [draft, setDraft] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
-  const task = tasks.find((item) => String(item.id) === id);
+  // The task is fetched by id rather than read from the list, so a deep link
+  // or a refresh works and an unknown id gets the server's 404 message.
+  useEffect(() => {
+    let ignore = false;
 
-  if (!task) {
+    getTask(id)
+      .then((serverTask) => {
+        if (!ignore) {
+          setTask(serverTask);
+          setIsLoading(false);
+        }
+      })
+      .catch((fetchError) => {
+        if (!ignore) {
+          setLoadError({ status: fetchError.status, message: fetchError.message });
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, reloadCount]);
+
+  const retry = () => {
+    setIsLoading(true);
+    setLoadError(null);
+    setReloadCount((count) => count + 1);
+  };
+
+  if (isLoading) {
     return (
       <section className="task-detail">
-        <h2>Task not found</h2>
-        <p>No task matches the id {id}.</p>
+        <p className="status-message">Loading task...</p>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    // 404 is an unknown id; 400 is an id the API cannot parse, such as "abc".
+    const isNotFound = loadError.status === 404 || loadError.status === 400;
+
+    return (
+      <section className="task-detail">
         <Link to="/tasks">Back to all tasks</Link>
+        <h2>{isNotFound ? 'Task not found' : 'Could not load this task'}</h2>
+        <p className="error-message" role="alert">
+          {loadError.message}
+        </p>
+        {!isNotFound && (
+          <button type="button" className="retry-button" onClick={retry}>
+            Retry
+          </button>
+        )}
       </section>
     );
   }
@@ -25,7 +81,7 @@ export default function TaskDetailPage() {
   const startEditing = () => {
     setDraft({
       title: task.title,
-      description: task.description,
+      description: task.description ?? '',
       status: task.status,
       priority: task.priority,
     });
@@ -48,13 +104,14 @@ export default function TaskDetailPage() {
 
     try {
       // PUT is a full replace, so every editable field is sent.
-      await updateTask(task.id, {
+      const updated = await updateTask(task.id, {
         title: draft.title.trim(),
         description: draft.description.trim(),
         status: draft.status,
         priority: draft.priority,
       });
 
+      setTask(updated);
       setDraft(null);
     } catch (submitError) {
       setSaveError(submitError.message);

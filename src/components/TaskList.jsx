@@ -3,7 +3,11 @@ import { useTasks } from '../context/TaskContext.jsx';
 import TaskItem from './TaskItem.jsx';
 
 export default function TaskList() {
-  const { filteredTasks } = useTasks();
+  const { tasks, filteredTasks } = useTasks();
+
+  if (tasks.length === 0) {
+    return <p>No tasks yet. Add one above.</p>;
+  }
 
   if (filteredTasks.length === 0) {
     return <p>No tasks match this filter.</p>;

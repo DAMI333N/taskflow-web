@@ -94,7 +94,8 @@ header h1 {
   color: #a3252b;
 }
 
-.edit-button {
+.edit-button,
+.retry-button {
   margin-top: 20px;
   padding: 8px 16px;
   font: inherit;
@@ -106,8 +107,25 @@ header h1 {
   cursor: pointer;
 }
 
-.edit-button:hover {
+.edit-button:hover,
+.retry-button:hover {
   background: #1f56c4;
+}
+
+.status-message {
+  margin: 0;
+  color: #6b7684;
+}
+
+.error-panel {
+  padding: 16px;
+  background: #fdf0f0;
+  border: 1px solid #f0c9cb;
+  border-radius: 8px;
+}
+
+.error-panel .retry-button {
+  margin-top: 12px;
 }
 
 /* Filter bar */

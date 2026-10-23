@@ -1,5 +1,5 @@
 // src/context/TaskContext.jsx
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import { createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { taskReducer, initialState } from '../reducer/taskReducer.js';
 import * as tasksApi from '../api/tasksApi.js';
 
@@ -7,6 +7,8 @@ const TaskContext = createContext(null);
 
 export function TaskProvider({ children }) {
   const [state, dispatch] = useReducer(taskReducer, initialState);
+  // Bumped by reload() to re-run the fetch effect.
+  const [reloadCount, setReloadCount] = useState(0);
 
   const { tasks, isLoading, error, filter, priorityFilter } = state;
 
@@ -32,7 +34,11 @@ export function TaskProvider({ children }) {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [reloadCount]);
+
+  const reload = () => {
+    setReloadCount((count) => count + 1);
+  };
 
   const filteredTasks = tasks.filter((task) => {
     const statusMatches = filter === 'all' || task.status === filter;
@@ -74,6 +80,7 @@ export function TaskProvider({ children }) {
     filteredTasks,
     isLoading,
     error,
+    reload,
     filter,
     priorityFilter,
     addTask,
