@@ -41,6 +41,8 @@ async function request(path, options = {}, parse = 'json') {
     return response.text();
   }
 
+  // Drain the empty body so the browser does not log the request as aborted.
+  await response.text();
   return null;
 }
 

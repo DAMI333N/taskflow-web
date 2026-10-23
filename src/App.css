@@ -242,6 +242,49 @@ header h1 {
   text-transform: capitalize;
 }
 
+.task-item.is-completed .task-title {
+  color: #7b8794;
+  text-decoration: line-through;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.complete-button {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #1a6b45;
+  background: #ffffff;
+  border: 1px solid #b7e1c9;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.complete-button:hover {
+  color: #ffffff;
+  background: #1f8a57;
+  border-color: #1f8a57;
+}
+
+.complete-button:disabled,
+.complete-button:disabled:hover {
+  color: #1a6b45;
+  background: #ffffff;
+  border-color: #b7e1c9;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.task-detail .complete-button {
+  margin: 20px 0 0 8px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 .delete-button {
   padding: 6px 12px;
   font: inherit;

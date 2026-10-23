@@ -11,7 +11,7 @@ export default function TaskDetailPage() {
 }
 
 function TaskDetail({ id }) {
-  const { updateTask } = useTasks();
+  const { updateTask, completeTask } = useTasks();
   const [task, setTask] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -19,6 +19,8 @@ function TaskDetail({ id }) {
   const [draft, setDraft] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState(null);
 
   // The task is fetched by id rather than read from the list, so a deep link
   // or a refresh works and an unknown id gets the server's 404 message.
@@ -125,6 +127,19 @@ function TaskDetail({ id }) {
     setSaveError(null);
   };
 
+  const handleComplete = async () => {
+    setIsCompleting(true);
+    setCompleteError(null);
+
+    try {
+      setTask(await completeTask(task.id));
+    } catch (completeFailure) {
+      setCompleteError(completeFailure.message);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   if (draft !== null) {
     return (
       <section className="task-detail">
@@ -218,6 +233,9 @@ function TaskDetail({ id }) {
         <dt>Description</dt>
         <dd>{task.description || 'No description provided.'}</dd>
 
+        <dt>Completed</dt>
+        <dd>{task.completed ? 'Yes' : 'No'}</dd>
+
         <dt>ID</dt>
         <dd>{String(task.id)}</dd>
       </dl>
@@ -225,6 +243,23 @@ function TaskDetail({ id }) {
       <button type="button" className="edit-button" onClick={startEditing}>
         Edit task
       </button>
+
+      {!task.completed && (
+        <button
+          type="button"
+          className="complete-button"
+          onClick={handleComplete}
+          disabled={isCompleting}
+        >
+          {isCompleting ? 'Completing...' : 'Mark complete'}
+        </button>
+      )}
+
+      {completeError && (
+        <p className="error-message" role="alert">
+          Could not complete: {completeError}
+        </p>
+      )}
     </section>
   );
 }

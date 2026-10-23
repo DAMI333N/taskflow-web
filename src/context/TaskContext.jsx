@@ -62,6 +62,12 @@ export function TaskProvider({ children }) {
     return updated;
   };
 
+  const completeTask = async (id) => {
+    const completed = await tasksApi.completeTask(id);
+    dispatch({ type: 'UPDATE_TASK', payload: completed });
+    return completed;
+  };
+
   const deleteTask = async (id) => {
     await tasksApi.removeTask(id);
     dispatch({ type: 'DELETE_TASK', payload: id });
@@ -85,6 +91,7 @@ export function TaskProvider({ children }) {
     priorityFilter,
     addTask,
     updateTask,
+    completeTask,
     deleteTask,
     setFilter,
     setPriorityFilter,
