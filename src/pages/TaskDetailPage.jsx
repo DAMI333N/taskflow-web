@@ -1,5 +1,5 @@
 // src/pages/TaskDetailPage.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTasks } from '../context/TaskContext.jsx';
 import { getTask } from '../api/tasksApi.js';
@@ -19,6 +19,9 @@ function TaskDetail({ id }) {
   const [draft, setDraft] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  // Set when leaving the edit form, so the heading takes focus once the
+  // read-only view mounts instead of focus falling back to the page.
+  const returnFocusRef = useRef(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [completeError, setCompleteError] = useState(null);
 
@@ -55,7 +58,9 @@ function TaskDetail({ id }) {
   if (isLoading) {
     return (
       <section className="task-detail">
-        <p className="status-message">Loading task...</p>
+        <p className="status-message" role="status">
+          Loading task...
+        </p>
       </section>
     );
   }
@@ -114,6 +119,7 @@ function TaskDetail({ id }) {
       });
 
       setTask(updated);
+      returnFocusRef.current = true;
       setDraft(null);
     } catch (submitError) {
       setSaveError(submitError.message);
@@ -123,8 +129,16 @@ function TaskDetail({ id }) {
   };
 
   const cancelEditing = () => {
+    returnFocusRef.current = true;
     setDraft(null);
     setSaveError(null);
+  };
+
+  const focusHeadingOnReturn = (node) => {
+    if (node && returnFocusRef.current) {
+      returnFocusRef.current = false;
+      node.focus();
+    }
   };
 
   const handleComplete = async () => {
@@ -156,6 +170,7 @@ function TaskDetail({ id }) {
             value={draft.title}
             onChange={handleChange}
             required
+            autoFocus
           />
 
           <label htmlFor="edit-description">Description</label>
@@ -221,7 +236,9 @@ function TaskDetail({ id }) {
     <section className="task-detail">
       <Link to="/tasks">Back to all tasks</Link>
 
-      <h2>{task.title}</h2>
+      <h2 tabIndex={-1} ref={focusHeadingOnReturn}>
+        {task.title}
+      </h2>
 
       <dl className="task-fields">
         <dt>Status</dt>

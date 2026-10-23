@@ -30,11 +30,24 @@ export function taskReducer(state, action) {
         error: action.payload,
       };
 
-    case 'ADD_TASK':
+    // An upsert: a list fetch that finished after the POST may already hold
+    // this task, and appending it again would show a duplicate row.
+    case 'ADD_TASK': {
+      const exists = state.tasks.some(
+        (task) => String(task.id) === String(action.payload.id)
+      );
+
       return {
         ...state,
-        tasks: [...state.tasks, action.payload],
+        tasks: exists
+          ? state.tasks.map((task) =>
+              String(task.id) === String(action.payload.id)
+                ? action.payload
+                : task
+            )
+          : [...state.tasks, action.payload],
       };
+    }
 
     case 'UPDATE_TASK':
       return {

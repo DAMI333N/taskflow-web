@@ -1,5 +1,8 @@
 // src/api/tasksApi.js
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// A trailing slash would turn every path into //api/tasks.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '');
+
+const UNEXPECTED_RESPONSE = 'Unexpected response from the TaskFlow API.';
 
 async function request(path, options = {}, parse = 'json') {
   if (!BASE_URL) {
@@ -34,7 +37,13 @@ async function request(path, options = {}, parse = 'json') {
   }
 
   if (parse === 'json') {
-    return response.json();
+    // A wrong base URL on Netlify returns index.html with a 200, which would
+    // otherwise surface as a raw JSON SyntaxError.
+    try {
+      return await response.json();
+    } catch {
+      throw new Error(UNEXPECTED_RESPONSE);
+    }
   }
 
   if (parse === 'text') {
@@ -54,8 +63,14 @@ function jsonBody(method, data) {
   };
 }
 
-export function listTasks() {
-  return request('/api/tasks');
+export async function listTasks() {
+  const tasks = await request('/api/tasks');
+
+  if (!Array.isArray(tasks)) {
+    throw new Error(UNEXPECTED_RESPONSE);
+  }
+
+  return tasks;
 }
 
 export function getTask(id) {

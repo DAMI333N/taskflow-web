@@ -33,7 +33,14 @@ export default function SummaryPanel() {
         {isLoading ? 'Summarising...' : 'Summarise tasks'}
       </button>
 
-      {summary && <p className="summary-text">{summary}</p>}
+      {/* The live region stays mounted so screen readers announce new text. */}
+      <div role="status" aria-live="polite">
+        {summary !== null && (
+          <p className="summary-text">
+            {summary || 'The API returned an empty summary.'}
+          </p>
+        )}
+      </div>
 
       {error && (
         <p className="error-message" role="alert">

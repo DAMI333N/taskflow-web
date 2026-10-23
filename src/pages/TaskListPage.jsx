@@ -11,7 +11,11 @@ export default function TaskListPage() {
   let content;
 
   if (isLoading) {
-    content = <p className="status-message">Loading tasks...</p>;
+    content = (
+      <p className="status-message" role="status">
+        Loading tasks...
+      </p>
+    );
   } else if (error) {
     content = (
       <div className="error-panel">
@@ -37,7 +41,9 @@ export default function TaskListPage() {
 
   return (
     <section>
-      <AddTaskForm />
+      {/* Only once the list is loaded: adding while a fetch is in flight could
+          be overwritten by that fetch's older result. */}
+      {!isLoading && !error && <AddTaskForm />}
       <SummaryPanel />
       <FilterBar />
       {content}

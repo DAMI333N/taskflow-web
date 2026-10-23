@@ -285,7 +285,7 @@ header h1 {
 }
 
 .task-item.is-completed .task-title {
-  color: #7b8794;
+  color: #616e7c;
   text-decoration: line-through;
 }
 
@@ -367,6 +367,11 @@ header h1 {
 
 .task-detail h2 {
   margin: 12px 0 20px;
+}
+
+/* The heading only takes focus from script, after leaving the edit form. */
+.task-detail h2:focus {
+  outline: none;
 }
 
 .task-detail a {

@@ -103,7 +103,8 @@ behind one helper that checks `response.ok` and, on failure, throws an `Error`
 carrying the message from the API's `{ status, message, timestamp }` body and
 the HTTP status. Components never call `fetch` directly.
 
-`TaskProvider` loads the list once on mount: it dispatches `FETCH_START`, then
+`TaskProvider` loads the list on mount, and again whenever Retry is pressed: it
+dispatches `FETCH_START`, then
 `FETCH_SUCCESS` with the server's tasks or `FETCH_ERROR` with the message. An
 `ignore` flag in the effect's cleanup discards a stale response, which matters
 because React StrictMode mounts twice in development.
@@ -112,7 +113,14 @@ because React StrictMode mounts twice in development.
 dispatch only after it succeeds, using the task the server returns. Nothing is
 updated optimistically, so the screen never shows a change the server rejected.
 Each action rethrows on failure, so the form or button that started it shows the
-error next to itself and keeps the user's input.
+error next to itself and keeps the user's input. A 404 on delete, edit or
+complete means another client already deleted the task, so it is dropped from
+the list to match the server. The add form only appears once the list has
+loaded, so a new task can never be overwritten by an older fetch result.
+
+The list held in the reducer is a client-side copy of the server's data. It is
+not re-fetched when you navigate between pages, so changes made by another
+browser or client show up after a reload or a Retry.
 
 The detail page fetches its own task by id instead of searching the list. A 404
 or 400 from the API shows "Task not found" with the server's message. Saving an
@@ -145,8 +153,12 @@ expected result on the live site.
 - **react-patterns skill** (ECC plugin for Claude Code) guided the state and
   data-fetching design, such as the effect cleanup flag and keeping derived data
   out of state.
-- **react-reviewer agent** (ECC plugin) reviewed the finished change set for
-  hook correctness, error handling and accessibility before submission.
+- **react-reviewer agent** (ECC plugin) reviewed the finished change set. It
+  found no critical or high issues and raised medium and low ones: a race
+  between adding a task and a list fetch, rows stuck after a 404, missing
+  screen-reader announcements and focus handling, colour contrast, and README
+  wording. Those were fixed in a follow-up commit; two minor performance notes
+  were left as they are at this app's size.
 - **Claude Code's Browser pane** ran every step against the real API through an
   SSH tunnel, checking network requests and the console.
 - Vite, ESLint, Git and the GitHub CLI for building, linting and version

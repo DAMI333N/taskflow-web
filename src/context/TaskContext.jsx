@@ -48,6 +48,14 @@ export function TaskProvider({ children }) {
     return statusMatches && priorityMatches;
   });
 
+  // A 404 means another client already deleted the task, so drop it from the
+  // list to match the server instead of leaving a row that can never succeed.
+  const forgetIfGone = (id, requestError) => {
+    if (requestError.status === 404) {
+      dispatch({ type: 'DELETE_TASK', payload: id });
+    }
+  };
+
   // Mutations call the API first and only touch state with the server's
   // response. Errors are rethrown so the calling component can show them.
   const addTask = async (fields) => {
@@ -57,19 +65,37 @@ export function TaskProvider({ children }) {
   };
 
   const updateTask = async (id, fields) => {
-    const updated = await tasksApi.updateTask(id, fields);
-    dispatch({ type: 'UPDATE_TASK', payload: updated });
-    return updated;
+    try {
+      const updated = await tasksApi.updateTask(id, fields);
+      dispatch({ type: 'UPDATE_TASK', payload: updated });
+      return updated;
+    } catch (updateError) {
+      forgetIfGone(id, updateError);
+      throw updateError;
+    }
   };
 
   const completeTask = async (id) => {
-    const completed = await tasksApi.completeTask(id);
-    dispatch({ type: 'UPDATE_TASK', payload: completed });
-    return completed;
+    try {
+      const completed = await tasksApi.completeTask(id);
+      dispatch({ type: 'UPDATE_TASK', payload: completed });
+      return completed;
+    } catch (completeError) {
+      forgetIfGone(id, completeError);
+      throw completeError;
+    }
   };
 
   const deleteTask = async (id) => {
-    await tasksApi.removeTask(id);
+    try {
+      await tasksApi.removeTask(id);
+    } catch (deleteError) {
+      // Already gone on the server is the outcome the user asked for.
+      if (deleteError.status !== 404) {
+        throw deleteError;
+      }
+    }
+
     dispatch({ type: 'DELETE_TASK', payload: id });
   };
 

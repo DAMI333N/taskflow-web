@@ -20,8 +20,14 @@ export default function FilterBar() {
 
   return (
     <div className="filter-bar">
-      <div className="filter-group">
-        <span className="filter-group-label">Status</span>
+      <div
+        className="filter-group"
+        role="group"
+        aria-labelledby="status-filter-label"
+      >
+        <span id="status-filter-label" className="filter-group-label">
+          Status
+        </span>
 
         {STATUS_FILTERS.map((option) => (
           <button
@@ -38,8 +44,14 @@ export default function FilterBar() {
         ))}
       </div>
 
-      <div className="filter-group">
-        <span className="filter-group-label">Priority</span>
+      <div
+        className="filter-group"
+        role="group"
+        aria-labelledby="priority-filter-label"
+      >
+        <span id="priority-filter-label" className="filter-group-label">
+          Priority
+        </span>
 
         {PRIORITY_FILTERS.map((option) => (
           <button
