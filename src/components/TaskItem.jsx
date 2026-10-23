@@ -7,6 +7,21 @@ export default function TaskItem({ task }) {
   const { deleteTask, reorderTasks } = useTasks();
   const [isDragging, setIsDragging] = useState(false);
   const [dropPosition, setDropPosition] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      // On success the row unmounts, so there is no state to reset.
+      await deleteTask(task.id);
+    } catch (deleteError) {
+      setError(deleteError.message);
+      setIsDeleting(false);
+    }
+  };
 
   const handleDragStart = (event) => {
     event.dataTransfer.setData('text/plain', String(task.id));
@@ -88,10 +103,17 @@ export default function TaskItem({ task }) {
       <button
         type="button"
         className="delete-button"
-        onClick={() => deleteTask(task.id)}
+        onClick={handleDelete}
+        disabled={isDeleting}
       >
-        Delete
+        {isDeleting ? 'Deleting...' : 'Delete'}
       </button>
+
+      {error && (
+        <p className="error-message" role="alert">
+          Could not delete: {error}
+        </p>
+      )}
     </li>
   );
 }

@@ -12,29 +12,40 @@ const EMPTY_FORM = {
 export default function AddTaskForm() {
   const { addTask } = useTasks();
   const [form, setForm] = useState(EMPTY_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
-  const isSubmitDisabled = form.title.trim() === '';
+  const isSubmitDisabled = form.title.trim() === '' || isSubmitting;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((previous) => ({ ...previous, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (isSubmitDisabled) {
       return;
     }
 
-    addTask({
-      title: form.title.trim(),
-      description: form.description.trim(),
-      status: form.status,
-      priority: form.priority,
-    });
+    setIsSubmitting(true);
+    setError(null);
 
-    setForm(EMPTY_FORM);
+    try {
+      await addTask({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        status: form.status,
+        priority: form.priority,
+      });
+
+      setForm(EMPTY_FORM);
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -84,8 +95,14 @@ export default function AddTaskForm() {
         <option value="high">High</option>
       </select>
 
+      {error && (
+        <p className="error-message" role="alert">
+          Could not add the task: {error}
+        </p>
+      )}
+
       <button type="submit" disabled={isSubmitDisabled}>
-        Add Task
+        {isSubmitting ? 'Adding...' : 'Add Task'}
       </button>
     </form>
   );

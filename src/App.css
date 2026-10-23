@@ -88,6 +88,12 @@ header h1 {
   border: 1px solid #cbd2d9;
 }
 
+.error-message {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: #a3252b;
+}
+
 .edit-button {
   margin-top: 20px;
   padding: 8px 16px;
@@ -251,6 +257,19 @@ header h1 {
   color: #ffffff;
   background: #c0392f;
   border-color: #c0392f;
+}
+
+.delete-button:disabled,
+.delete-button:disabled:hover {
+  color: #a3252b;
+  background: #ffffff;
+  border-color: #f0c9cb;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.task-item .error-message {
+  grid-column: 1 / -1;
 }
 
 /* Detail page */

@@ -1,39 +1,38 @@
 // src/context/TaskContext.jsx
 import { createContext, useContext, useEffect, useReducer } from 'react';
 import { taskReducer, initialState } from '../reducer/taskReducer.js';
+import * as tasksApi from '../api/tasksApi.js';
 
 const TaskContext = createContext(null);
 
-const STORAGE_KEY = 'task-manager.tasks';
-
-function initTaskState(defaultState) {
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-
-    if (stored === null) {
-      return defaultState;
-    }
-
-    const parsed = JSON.parse(stored);
-
-    if (!Array.isArray(parsed)) {
-      return defaultState;
-    }
-
-    return { ...defaultState, tasks: parsed };
-  } catch {
-    return defaultState;
-  }
-}
-
 export function TaskProvider({ children }) {
-  const [state, dispatch] = useReducer(taskReducer, initialState, initTaskState);
+  const [state, dispatch] = useReducer(taskReducer, initialState);
 
-  const { tasks, filter, priorityFilter } = state;
+  const { tasks, isLoading, error, filter, priorityFilter } = state;
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
+    // StrictMode mounts twice in development; ignore the first run's result.
+    let ignore = false;
+
+    dispatch({ type: 'FETCH_START' });
+
+    tasksApi
+      .listTasks()
+      .then((serverTasks) => {
+        if (!ignore) {
+          dispatch({ type: 'FETCH_SUCCESS', payload: serverTasks });
+        }
+      })
+      .catch((fetchError) => {
+        if (!ignore) {
+          dispatch({ type: 'FETCH_ERROR', payload: fetchError.message });
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const filteredTasks = tasks.filter((task) => {
     const statusMatches = filter === 'all' || task.status === filter;
@@ -43,24 +42,22 @@ export function TaskProvider({ children }) {
     return statusMatches && priorityMatches;
   });
 
-  const addTask = ({ title, description, status, priority }) => {
-    dispatch({
-      type: 'ADD_TASK',
-      payload: {
-        id: crypto.randomUUID(),
-        title,
-        description,
-        status,
-        priority,
-      },
-    });
+  // Mutations call the API first and only touch state with the server's
+  // response. Errors are rethrown so the calling component can show them.
+  const addTask = async (fields) => {
+    const created = await tasksApi.createTask(fields);
+    dispatch({ type: 'ADD_TASK', payload: created });
+    return created;
   };
 
-  const updateTask = (updatedTask) => {
-    dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+  const updateTask = async (id, fields) => {
+    const updated = await tasksApi.updateTask(id, fields);
+    dispatch({ type: 'UPDATE_TASK', payload: updated });
+    return updated;
   };
 
-  const deleteTask = (id) => {
+  const deleteTask = async (id) => {
+    await tasksApi.removeTask(id);
     dispatch({ type: 'DELETE_TASK', payload: id });
   };
 
@@ -82,6 +79,8 @@ export function TaskProvider({ children }) {
   const value = {
     tasks,
     filteredTasks,
+    isLoading,
+    error,
     filter,
     priorityFilter,
     addTask,

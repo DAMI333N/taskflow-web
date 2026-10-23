@@ -7,6 +7,8 @@ export default function TaskDetailPage() {
   const { id } = useParams();
   const { tasks, updateTask } = useTasks();
   const [draft, setDraft] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const task = tasks.find((item) => String(item.id) === id);
 
@@ -34,22 +36,36 @@ export default function TaskDetailPage() {
     setDraft((previous) => ({ ...previous, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (draft.title.trim() === '') {
+    if (draft.title.trim() === '' || isSaving) {
       return;
     }
 
-    updateTask({
-      ...task,
-      title: draft.title.trim(),
-      description: draft.description.trim(),
-      status: draft.status,
-      priority: draft.priority,
-    });
+    setIsSaving(true);
+    setSaveError(null);
 
+    try {
+      // PUT is a full replace, so every editable field is sent.
+      await updateTask(task.id, {
+        title: draft.title.trim(),
+        description: draft.description.trim(),
+        status: draft.status,
+        priority: draft.priority,
+      });
+
+      setDraft(null);
+    } catch (submitError) {
+      setSaveError(submitError.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const cancelEditing = () => {
     setDraft(null);
+    setSaveError(null);
   };
 
   if (draft !== null) {
@@ -103,14 +119,23 @@ export default function TaskDetailPage() {
             <option value="high">High</option>
           </select>
 
+          {saveError && (
+            <p className="error-message" role="alert">
+              Could not save: {saveError}
+            </p>
+          )}
+
           <div className="form-actions">
-            <button type="submit" disabled={draft.title.trim() === ''}>
-              Save changes
+            <button
+              type="submit"
+              disabled={draft.title.trim() === '' || isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save changes'}
             </button>
             <button
               type="button"
               className="button-secondary"
-              onClick={() => setDraft(null)}
+              onClick={cancelEditing}
             >
               Cancel
             </button>

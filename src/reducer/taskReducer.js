@@ -1,14 +1,35 @@
 // src/reducer/taskReducer.js
-import { seedTasks } from '../data/seedTasks.js';
-
 export const initialState = {
-  tasks: seedTasks,
+  tasks: [],
+  isLoading: true,
+  error: null,
   filter: 'all',
   priorityFilter: 'all',
 };
 
 export function taskReducer(state, action) {
   switch (action.type) {
+    case 'FETCH_START':
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+      };
+
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        tasks: action.payload,
+        isLoading: false,
+      };
+
+    case 'FETCH_ERROR':
+      return {
+        ...state,
+        isLoading: false,
+        error: action.payload,
+      };
+
     case 'ADD_TASK':
       return {
         ...state,
@@ -19,9 +40,7 @@ export function taskReducer(state, action) {
       return {
         ...state,
         tasks: state.tasks.map((task) =>
-          String(task.id) === String(action.payload.id)
-            ? { ...task, ...action.payload }
-            : task
+          String(task.id) === String(action.payload.id) ? action.payload : task
         ),
       };
 
