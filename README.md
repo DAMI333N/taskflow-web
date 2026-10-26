@@ -154,25 +154,3 @@ Rather than show a control that quietly loses your work, drag-and-drop and the
 model. When the API has no model key configured it returns 502, and the page
 shows the API's message under the button instead of failing. That is the
 expected result on the live site.
-
-## AI and Tools
-
-- **Claude Code** (Anthropic) planned the migration from my step list, then
-  implemented it one step per commit. I approved the plan before any code was
-  written and reviewed each step's diff, browser check and commit.
-- **react-patterns skill** (ECC plugin for Claude Code) guided the state and
-  data-fetching design, such as the effect cleanup flag and keeping derived data
-  out of state.
-- **react-reviewer agent** (ECC plugin) reviewed the finished change set. It
-  found no critical or high issues and raised medium and low ones: a race
-  between adding a task and a list fetch, rows stuck after a 404, missing
-  screen-reader announcements and focus handling, colour contrast, and README
-  wording. Those were fixed in a follow-up commit; two minor performance notes
-  were left as they are at this app's size.
-- **Claude Code's Browser pane** ran every step against the real API through an
-  SSH tunnel, checking network requests and the console.
-- Vite, ESLint, Git and the GitHub CLI for building, linting and version
-  control; Netlify for hosting.
-
-No code was copied from external sources beyond the React, React Router and Vite
-documentation.
