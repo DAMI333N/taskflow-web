@@ -9,7 +9,12 @@ Built for NTU AI Engineering, Module 4, stretch Option 2. It started from my
 Module 2 React app and replaces its local state and `localStorage` with the
 API.
 
-Live site: `https://<site-name>.netlify.app` (placeholder until deployed)
+Live site: [taskflow-dami333n.netlify.app](https://taskflow-dami333n.netlify.app),
+backed by the API on Render at
+[taskflow-api-qtc9.onrender.com](https://taskflow-api-qtc9.onrender.com/api/tasks).
+The API runs on Render's free tier, which sleeps after 15 minutes idle, so the
+first load after a quiet spell shows "Loading tasks..." for up to a minute. Its
+task store is in memory, so tasks reset to the six seed tasks whenever it restarts.
 
 ![Task list loaded from the TaskFlow API, with Complete and Delete buttons on each row](docs/screenshot.jpg)
 
@@ -79,6 +84,11 @@ npm run lint      # ESLint
   `/tasks/3` loads the app instead of a Netlify 404
 - The API must list the Netlify origin in `taskflow.cors.allowed-origins`,
   otherwise the browser blocks every request
+- For this site, `VITE_API_BASE_URL` is the Render URL above, and the API's
+  Render service sets `TASKFLOW_CORS_ALLOWEDORIGINS` to
+  `https://taskflow-dami333n.netlify.app,http://localhost:5173,http://127.0.0.1:5173`.
+  Before that variable was set, every request failed with a 403 and the
+  browser reported a missing `Access-Control-Allow-Origin` header.
 
 ## Project structure
 
